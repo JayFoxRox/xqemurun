@@ -241,7 +241,7 @@ class XQEMURun():
 
 		if self.config_runtime.getKey("core", "gdb") == "yes":
 			print("gdb debug: enabled")
-			qemu_command += [ "-s", "-S" ]
+			qemu_command += [ "-s" ] # Pause: [ "-S" ]
 		else:
 			print("gdb debug: disabled")
 
@@ -315,7 +315,7 @@ class XQEMURun():
 
 		qemu_media_arg = "index=1,media=cdrom"
 
-		media_path = self.config_runtime.getKey(machine, "media")
+		media_path = self.config_runtime.getKey("sys", "media")
 		if media_path and media_path not in self.disabled:
 			print("media iso: " + media_path)
 			qemu_media_arg += ",file=" + media_path
@@ -343,7 +343,7 @@ class XQEMURun():
 			print("usb hub: " + usb_hub_option)
 			usb_product_id = usb_hub_option[8:13]
 			usb_vendor_id = usb_hub_option[14:19]
-			qemu_usb_hub_device_arg = "usb-host,bus=usb-bus.0,port=3,product_id=" + usb_product_id + ",vendorid=" + usb_vendor_id
+			qemu_usb_hub_device_arg = "usb-host,bus=usb-bus.0,port=3,productid=" + usb_product_id + ",vendorid=" + usb_vendor_id
 			qemu_command += [ "-usb", "-device", qemu_usb_hub_device_arg ]
 
 		if usb_hub_option == "emulated":
@@ -357,15 +357,30 @@ class XQEMURun():
 
 				if usb_pad_option == "keyboard":
 					print("usb " + pad + ": keyboard")
-					qemu_usb_pad_device_arg = "usb-xbox-gamepad,bus=usb-bus.0,port=" + pad_dict[pad] + ".2"
+					qemu_usb_pad_device_arg = "usb-xbox-gamepad,port=3" #,port=" + pad_dict[pad] + ".2"
 					qemu_command += [ "-device", qemu_usb_pad_device_arg ]
 
 				elif usb_pad_option[0:8] == "forward:":
 					print("usb " + pad + ": " + usb_pad_option)
 					usb_product_id = usb_hub_option[8:13]
 					usb_vendor_id = usb_hub_option[14:19]
-					qemu_usb_pad_device_arg = "usb-host,bus=usb-bus.0,port=3.2,product_id=" + usb_product_id + ",vendorid=" + usb_vendor_id
+					qemu_usb_pad_device_arg = "usb-host,bus=usb-bus.0,port=3.2,productid=" + usb_product_id + ",vendorid=" + usb_vendor_id
 					qemu_command += [ "-usb", "-device", qemu_usb_hub_device_arg ]
+
+		qemu_command += [ "-display", "gtk" ]
+		#qemu_command += [ "-display", "sdl" ]
+
+		if False:
+			qemu_command += [ "-net", "bridge,helper=/usr/lib/qemu/qemu-bridge-helper,br=bridge0" ]
+			qemu_command += [ "-net", "nic,model=nvnet" ]
+		else:
+			qemu_command += [ "-redir", "tcp:9269::9269" ]
+			qemu_command += [ "-redir", "tcp:8731::731" ]
+			#qemu_command += [ "-redir", "tcp:20::20" ]
+			#qemu_command += [ "-redir", "tcp:80::80" ]
+			qemu_command += [ "-redir", "tcp:4097::4097" ]
+			#qemu_command += [ "-smb", "/tmp/xqemu" ]
+
 
 		print("qemu command line : " + str(qemu_command))
 
